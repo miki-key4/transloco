@@ -264,14 +264,18 @@ export class TranslocoService implements OnDestroy {
     params: HashMap = {},
     lang = this.getActiveLang()
   ): T {
-    if (!key) return key as any;
+    if (!key) return key as unknown as T;
+
+    if (typeof key === "string" && key.startsWith('%t%')) {
+      return key.substring(3) as unknown as T;
+    }
 
     const { scope, resolveLang } = this.resolveLangAndScope(lang);
 
     if (Array.isArray(key)) {
       return key.map((k) =>
         this.translate(scope ? `${scope}.${k}` : k, params, resolveLang)
-      ) as any;
+      ) as unknown as T;
     }
 
     key = scope ? `${scope}.${key}` : key;
@@ -280,7 +284,7 @@ export class TranslocoService implements OnDestroy {
     const value = translation[key];
 
     if (!value) {
-      return this._handleMissingKey(key, value, params);
+      return this._handleMissingKey(key, value, params) as unknown as T;
     }
 
     return this.parser.transpile({
@@ -288,7 +292,7 @@ export class TranslocoService implements OnDestroy {
       params,
       translation,
       key,
-    });
+    }) as unknown as T;
   }
 
   /**
